@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --hoyre-blue: #003087;
+    --hoyre-blue-dark: #002060;
+    --hoyre-blue-light: #1a4aa8;
+    --hoyre-blue-pale: #e8edf8;
+  }
+
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-hoyre-blue text-white rounded-lg
+           font-medium text-sm hover:bg-hoyre-blue-dark transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border
+           border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300
+           rounded-lg font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-2 text-gray-600 dark:text-gray-400
+           rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
+  }
+
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700
+           shadow-sm;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200
+           dark:border-gray-700 rounded-lg text-sm focus:outline-none
+           focus:ring-2 focus:ring-hoyre-blue/30 focus:border-hoyre-blue
+           dark:text-gray-100 placeholder-gray-400;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .streaming-text {
+    @apply whitespace-pre-wrap leading-relaxed;
+  }
+}
+
+/* Slider customization */
+[data-radix-slider-thumb] {
+  @apply w-5 h-5 bg-hoyre-blue border-2 border-white shadow-md rounded-full
+         focus:outline-none focus:ring-2 focus:ring-hoyre-blue/40 cursor-grab;
+}
+
+[data-radix-slider-track] {
+  @apply h-2 bg-gray-200 dark:bg-gray-700 rounded-full;
+}
+
+[data-radix-slider-range] {
+  @apply bg-hoyre-blue rounded-full;
+}
