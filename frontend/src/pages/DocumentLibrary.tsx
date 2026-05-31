@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Upload, Globe, Filter, X } from 'lucide-react'
+import { Search, Upload, Filter, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import DocumentCard from '@/components/documents/DocumentCard'
 import UploadZone from '@/components/documents/UploadZone'
-import ScrapingProgress from '@/components/documents/ScrapingProgress'
 import { cn } from '@/lib/utils'
 
 interface Doc {
@@ -33,7 +32,6 @@ export default function DocumentLibrary() {
   const [committee, setCommittee] = useState('')
   const [committees, setCommittees] = useState<string[]>([])
   const [showUpload, setShowUpload] = useState(false)
-  const [showScraping, setShowScraping] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
@@ -104,10 +102,6 @@ export default function DocumentLibrary() {
           <p className="text-sm text-gray-500 mt-0.5">{docs.length} dokumenter</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-secondary" onClick={() => setShowScraping(true)}>
-            <Globe size={15} />
-            Skrap møteportal
-          </button>
           <button className="btn-primary" onClick={() => setShowUpload(true)}>
             <Upload size={15} />
             Last opp PDF
@@ -231,13 +225,6 @@ export default function DocumentLibrary() {
         </div>
       )}
 
-      {showScraping && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="card w-full max-w-lg">
-            <ScrapingProgress onClose={() => setShowScraping(false)} onDone={fetchDocs} />
-          </div>
-        </div>
-      )}
     </div>
   )
 }

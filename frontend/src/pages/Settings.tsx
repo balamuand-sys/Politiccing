@@ -1,58 +1,38 @@
 import { useState, useEffect } from 'react'
-import { Settings as SettingsIcon, Key, Globe, User, CheckCircle, AlertCircle } from 'lucide-react'
+import { Settings as SettingsIcon, Key, User, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
 import { api } from '@/lib/api'
 
 interface SettingsData {
   api_key_set: boolean
-  api_key_masked: string
-  portal_url: string
+  voyage_key_set: boolean
   user_name: string
   party: string
+  portal_url: string
 }
 
 export default function Settings() {
   const [settings, setSettings] = useState<SettingsData | null>(null)
-  const [apiKey, setApiKey] = useState('')
-  const [portalUrl, setPortalUrl] = useState('')
   const [userName, setUserName] = useState('')
   const [party, setParty] = useState('Høyre')
   const [saving, setSaving] = useState(false)
-  const [testing, setTesting] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.get('/settings')
-      .then((r) => {
-        setSettings(r.data)
-        setPortalUrl(r.data.portal_url || '')
-        setUserName(r.data.user_name || '')
-        setParty(r.data.party || 'Høyre')
-      })
-      .catch(() => {})
+    api.get('/settings').then((r) => {
+      setSettings(r.data)
+      setUserName(r.data.user_name || '')
+      setParty(r.data.party || 'Høyre')
+    }).catch(() => {})
   }, [])
 
   async function handleSave() {
-    setSaving(true)
-    setError(null)
-    setSaved(false)
+    setSaving(true); setError(null); setSaved(false)
     try {
-      const body: Record<string, string> = {
-        portal_url: portalUrl,
-        user_name: userName,
-        party,
-      }
-      if (apiKey) body.api_key = apiKey
-
-      await api.post('/settings', body)
+      await api.post('/settings', { user_name: userName, party })
       setSaved(true)
-      setApiKey('')
-
-      // Refresh
-      const r = await api.get('/settings')
-      setSettings(r.data)
-
       setTimeout(() => setSaved(false), 3000)
     } catch (e: unknown) {
       setError((e as Error).message)
@@ -62,8 +42,7 @@ export default function Settings() {
   }
 
   async function handleTestApi() {
-    setTesting(true)
-    setTestResult(null)
+    setTesting(true); setTestResult(null)
     try {
       const res = await api.post('/settings/test-api')
       setTestResult({ ok: true, message: `Tilkobling OK — svar: "${res.data.response}"` })
@@ -74,6 +53,17 @@ export default function Settings() {
     }
   }
 
+  const StatusBadge = ({ ok, label }: { ok: boolean; label: string }) => (
+    <div className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 border ${
+      ok
+        ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+        : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+    }`}>
+      {ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+      {label}: {ok ? 'Satt ✓' : 'Mangler'}
+    </div>
+  )
+
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <div className="mb-6">
@@ -81,52 +71,67 @@ export default function Settings() {
           <SettingsIcon size={24} className="text-hoyre-blue" />
           Innstillinger
         </h1>
-        <p className="text-sm text-gray-500 mt-1">Konfigurer API-nøkkel og personlig informasjon</p>
+        <p className="text-sm text-gray-500 mt-1">Konfigurer appen og API-tilkoblinger</p>
       </div>
 
       <div className="space-y-6">
-        {/* API Key */}
+
+        {/* Environment variables status */}
         <div className="card p-5 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <Key size={16} className="text-hoyre-blue" />
-            Anthropic API-nøkkel
+            API-nøkler (Vercel Environment Variables)
           </h2>
-          {settings?.api_key_set && (
-            <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-              <CheckCircle size={14} />
-              API-nøkkel er satt: <code className="font-mono">{settings.api_key_masked}</code>
+          <p className="text-sm text-gray-500">
+            API-nøkler settes i Vercel-dashbordet, ikke her i appen. Gå til
+            <a
+              href="https://vercel.com/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-hoyre-blue hover:underline inline-flex items-center gap-1 ml-1"
+            >
+              vercel.com/dashboard <ExternalLink size={11} />
+            </a>
+            → ditt prosjekt → Settings → Environment Variables.
+          </p>
+
+          {settings && (
+            <div className="space-y-2">
+              <StatusBadge ok={settings.api_key_set} label="ANTHROPIC_API_KEY" />
+              <StatusBadge ok={settings.voyage_key_set} label="VOYAGE_API_KEY" />
             </div>
           )}
-          <div>
-            <label className="label">
-              {settings?.api_key_set ? 'Ny API-nøkkel (la stå tom for å beholde eksisterende)' : 'API-nøkkel'}
-            </label>
-            <input
-              type="password"
-              className="input font-mono"
-              placeholder="sk-ant-api03-..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              autoComplete="off"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Hent nøkkel på{' '}
-              <span className="text-hoyre-blue">console.anthropic.com</span>
-              {' '}→ API Keys. Lagres i <code className="font-mono text-xs">~/.politikerapp/.env</code>
-            </p>
+
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-sm space-y-2 font-mono">
+            <p className="font-sans text-xs text-gray-500 font-medium mb-2">Påkrevde env vars:</p>
+            <div className="text-gray-700 dark:text-gray-300">ANTHROPIC_API_KEY=sk-ant-...</div>
+            <div className="text-gray-700 dark:text-gray-300">VOYAGE_API_KEY=pa-...</div>
+            <div className="text-gray-700 dark:text-gray-300">SUPABASE_URL=https://xxx.supabase.co</div>
+            <div className="text-gray-700 dark:text-gray-300">SUPABASE_SERVICE_ROLE_KEY=eyJ...</div>
           </div>
-          <button
-            className="btn-secondary"
-            onClick={handleTestApi}
-            disabled={testing || (!settings?.api_key_set && !apiKey)}
-          >
-            {testing ? (
-              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <CheckCircle size={14} />
-            )}
-            Test API-tilkobling
-          </button>
+
+          <div className="flex gap-2">
+            <button
+              className="btn-secondary"
+              onClick={handleTestApi}
+              disabled={testing}
+            >
+              {testing
+                ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                : <CheckCircle size={14} />}
+              Test Anthropic-tilkobling
+            </button>
+            <a
+              href="https://console.anthropic.com/settings/keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary text-sm"
+            >
+              <ExternalLink size={13} />
+              Hent API-nøkkel
+            </a>
+          </div>
+
           {testResult && (
             <div className={`flex items-start gap-2 text-sm rounded-lg px-3 py-2 border ${
               testResult.ok
@@ -137,24 +142,6 @@ export default function Settings() {
               {testResult.message}
             </div>
           )}
-        </div>
-
-        {/* Portal URL */}
-        <div className="card p-5 space-y-4">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Globe size={16} className="text-hoyre-blue" />
-            ACOS Møteportal
-          </h2>
-          <div>
-            <label className="label">Møteportal-URL</label>
-            <input
-              type="url"
-              className="input"
-              placeholder="https://www.kommune.no/politikk/moter"
-              value={portalUrl}
-              onChange={(e) => setPortalUrl(e.target.value)}
-            />
-          </div>
         </div>
 
         {/* User info */}
@@ -182,9 +169,7 @@ export default function Settings() {
               onChange={(e) => setParty(e.target.value)}
             />
           </div>
-          <p className="text-xs text-gray-500">
-            Brukes i AI-generering for å personalisere taler og leserinnlegg.
-          </p>
+          <p className="text-xs text-gray-500">Brukes i AI-generering for å personalisere taler og leserinnlegg.</p>
         </div>
 
         {error && (
@@ -194,30 +179,23 @@ export default function Settings() {
           </div>
         )}
 
-        <button
-          className="btn-primary w-full py-2.5"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : saved ? (
-            <>
-              <CheckCircle size={16} />
-              Lagret!
-            </>
-          ) : (
-            'Lagre innstillinger'
-          )}
+        <button className="btn-primary w-full py-2.5" onClick={handleSave} disabled={saving}>
+          {saving
+            ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            : saved
+              ? <><CheckCircle size={16} />Lagret!</>
+              : 'Lagre innstillinger'}
         </button>
 
-        {/* Info box */}
-        <div className="bg-hoyre-blue-pale dark:bg-hoyre-blue/10 border border-hoyre-blue/20 rounded-xl p-4 text-sm">
-          <p className="font-medium text-hoyre-blue mb-1">Personvern</p>
+        {/* Voyage AI info */}
+        <div className="bg-hoyre-blue-pale dark:bg-hoyre-blue/10 border border-hoyre-blue/20 rounded-xl p-4 text-sm space-y-1">
+          <p className="font-medium text-hoyre-blue">Voyage AI (semantisk søk)</p>
           <p className="text-gray-600 dark:text-gray-400">
-            All data lagres lokalt på din Mac i <code className="font-mono text-xs">~/politikerapp/</code>.
-            API-nøkkelen lagres i <code className="font-mono text-xs">~/.politikerapp/.env</code> og sendes
-            kun direkte til Anthropic. Ingen data sendes til skyen.
+            Voyage AI brukes for norsk semantisk søk og embedding av dokumenter.
+            Hent gratis API-nøkkel på{' '}
+            <a href="https://www.voyageai.com" target="_blank" rel="noopener noreferrer" className="text-hoyre-blue hover:underline inline-flex items-center gap-0.5">
+              voyageai.com <ExternalLink size={10} />
+            </a>
           </p>
         </div>
       </div>

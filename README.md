@@ -1,126 +1,90 @@
 # Politikerapp — AI-assistent for kommunepolitikere
 
-En lokal, sikker AI-assistent for Høyre-politikere som hjelper med å lese, analysere
+En AI-assistent for Høyre-politikere som hjelper med å lese, analysere
 og produsere innhold basert på kommunale saksdokumenter.
+
+**Stack:** React + FastAPI (Vercel serverless) + Supabase (PostgreSQL + pgvector + Storage)
 
 ## Funksjoner
 
-- **Dokumentbibliotek** — Last opp PDF-er eller skrap automatisk fra ACOS Møteportal
-- **AI-oppsummering** — Streaming-oppsummering med justerbar lengde
-- **Taler og leserinnlegg** — Generer politisk innhold med tone- og lengde-sliders
-- **Berikelse** — Hent lover, nyheter, andre kommuners vedtak, budsjettdata og forskning
-- **Politisk hukommelse** — Lagre din skrivestil og politiske standpunkter
-- **Semantisk søk** — Finn relevante saker på tvers av alle dokumenter
+- **Dokumentbibliotek** — Last opp PDF-er, søk semantisk på norsk
+- **AI-oppsummering** — Streaming med justerbar lengde
+- **Taler og leserinnlegg** — Lengde- og tone-sliders, Høyre-perspektiv
+- **Berikelse** — Hent lover, nyheter, andre kommuners vedtak, budsjettdata, forskning
+- **Politisk hukommelse** — Skrivestil-eksempler og politiske standpunkter
 
-All data lagres lokalt på din Mac. Ingenting sendes til skyen unntatt API-kall til Anthropic.
+## Oppsett
 
-## Krav
+### 1. Supabase
 
-- Python 3.11+
-- Node.js 18+
-- Anthropic API-nøkkel (fra [console.anthropic.com](https://console.anthropic.com/settings/keys))
+1. Åpne [Supabase SQL Editor](https://supabase.com/dashboard) for prosjektet ditt
+2. Kjør hele innholdet i `supabase/migration.sql`
+3. Gå til **Storage** → Opprett ny bucket `pol-documents` (privat)
+4. Kopier:
+   - **Project URL** (`Settings → API → Project URL`)
+   - **service_role key** (`Settings → API → Project API keys → service_role`)
 
-## Kom i gang
+### 2. API-nøkler du trenger
 
-```bash
-# 1. Klon repoet
-git clone <repo-url>
-cd Politiccing
+| Nøkkel | Hvor du får den |
+|--------|-----------------|
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| `VOYAGE_API_KEY` | [app.voyageai.com](https://www.voyageai.com) (gratis tier) |
+| `SUPABASE_URL` | Supabase → Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API |
 
-# 2. Kjør oppsett (én gang)
-bash setup.sh
+### 3. Vercel
 
-# 3. Legg til API-nøkkel
-#    Enten via Innstillinger-siden i appen, eller:
-nano ~/.politikerapp/.env
-#    Sett: ANTHROPIC_API_KEY=sk-ant-...
+1. Importer dette repoet på [vercel.com/new](https://vercel.com/new)
+2. Gå til **Settings → Environment Variables** og legg til alle 4 nøkler
+3. Klikk **Redeploy**
 
-# 4. Start appen
-bash start.sh
-
-# 5. Åpne i nettleser
-#    http://localhost:3000
-```
+Appen er nå live! Gå til Innstillinger-siden og klikk "Test Anthropic-tilkobling" for å verifisere.
 
 ## Mappestruktur
 
 ```
 Politiccing/
-├── frontend/          React + Tailwind + shadcn/ui (port 3000)
-├── backend/           Python + FastAPI (port 8000)
-├── setup.sh           Oppsett-skript (kjør én gang)
-├── start.sh           Start begge tjenestene
-└── README.md
-
-Lokal datalagring:
-~/.politikerapp/
-├── .env               API-nøkkel og innstillinger
-├── data/
-│   └── documents.db   SQLite-database
-├── logs/              API-logg og app-logg
-└── uploads/           Opplastede og skrapede PDF-er
+├── api/                    FastAPI serverless (Vercel Python)
+│   ├── index.py            Entry point
+│   ├── requirements.txt    Python-avhengigheter
+│   ├── database.py         Supabase-klient
+│   ├── models.py           Pydantic-modeller
+│   ├── routers/            7 API-rutere
+│   └── services/           Claude, Voyage AI, PDF, kontekstbygging
+├── frontend/               React 18 + TypeScript + Tailwind CSS
+│   └── src/
+│       ├── pages/          4 sider
+│       └── components/     AI, dokumenter, layout
+├── supabase/
+│   └── migration.sql       Kjør dette i Supabase SQL Editor
+└── vercel.json             Vercel-konfigurasjon
 ```
 
-## Bruk
+## Lokal utvikling
 
-### Last opp dokumenter
-Klikk "Last opp PDF" og dra inn et kommunalt saksdokument.
-AI-en ekstraherer automatisk tittel, dato, utvalg og dokumenttype.
+```bash
+# Backend
+cd api
+pip install -r requirements.txt
+# Sett env vars i .env og kjør:
+uvicorn index:app --port 8000 --reload
 
-### Skrap fra ACOS Møteportal
-1. Klikk "Skrap møteportal" og skriv inn portal-URL
-2. En nettleser åpnes — logg inn med BankID manuelt
-3. Klikk "Fortsett" i appen
-4. Alle tilgjengelige dokumenter lastes ned og analyseres automatisk
-
-### Generer tale eller leserinnlegg
-1. Åpne et dokument
-2. Velg fanen "Tale" eller "Leserinnlegg"
-3. Juster lengde- og tone-slider
-4. Klikk "Generer"
-5. Rediger teksten og lagre som stileksempel
-
-### Politisk hukommelse
-Gå til "Kontekst og hukommelse" for å:
-- Lagre eksempler på din skrivestil
-- Registrere politiske standpunkter (brukes automatisk i generering)
-- Søke semantisk på tvers av alle dokumenter
+# Frontend (separat terminal)
+cd frontend
+npm install
+npm run dev
+# Åpne http://localhost:3000
+```
 
 ## Teknisk informasjon
 
 | Komponent | Teknologi |
 |-----------|-----------|
 | Frontend | React 18 + TypeScript + Tailwind CSS |
-| Backend | Python + FastAPI |
-| Database | SQLite + sqlite-vec |
+| Backend | Python + FastAPI (Vercel serverless) |
+| Database | Supabase PostgreSQL + pgvector |
 | AI-modell | claude-sonnet-4-20250514 |
-| Embeddings | intfloat/multilingual-e5-large |
+| Embeddings | Voyage AI voyage-multilingual-2 (1024-dim, norsk) |
 | PDF-parsing | PyMuPDF |
-| Browser-automasjon | Playwright |
-
-## Personvern
-
-- Alle dokumenter lagres kun lokalt i `~/politikerapp/`
-- API-nøkkelen lagres i `~/.politikerapp/.env` og sendes kun til Anthropic
-- Ingen data deles med tredjeparter
-
-## Feilsøking
-
-**Backend starter ikke:**
-```bash
-cd backend
-source .venv/bin/activate
-pip install -r requirements.txt
-python database.py
-```
-
-**Embeddings-modell mangler:**
-Første gang du bruker semantisk søk lastes modellen ned automatisk (~1.5 GB).
-Dette kan ta noen minutter.
-
-**Playwright finner ikke nettleser:**
-```bash
-cd backend
-source .venv/bin/activate
-python -m playwright install chromium
-```
+| Fillagring | Supabase Storage |

@@ -12,6 +12,8 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // Local development: proxy /api to uvicorn running on 8000
+      // Production (Vercel): /api routes directly to the Python serverless function
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
