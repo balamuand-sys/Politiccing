@@ -4,7 +4,7 @@ from database import get_supabase
 from models import SettingsUpdate
 from services import claude_client
 
-router = APIRouter(prefix="/api/settings", tags=["settings"])
+router = APIRouter(prefix="/settings", tags=["settings"])
 
 
 def _get_setting(sb, key: str) -> str:

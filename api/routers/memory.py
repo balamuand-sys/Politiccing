@@ -4,7 +4,7 @@ from models import StyleMemoryCreate, PoliticalContextCreate
 from services import claude_client
 from services.embeddings import embed_query
 
-router = APIRouter(prefix="/api/memory", tags=["memory"])
+router = APIRouter(prefix="/memory", tags=["memory"])
 
 
 # ---- Style memory ----

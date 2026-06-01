@@ -7,7 +7,7 @@ from models import ContentGenerateRequest
 from services import claude_client
 from services.context_builder import build_context, get_political_context, get_style_examples
 
-router = APIRouter(prefix="/api/documents", tags=["content"])
+router = APIRouter(prefix="/documents", tags=["content"])
 
 
 def _length_words(content_type: str, length: int) -> tuple[int, str]:

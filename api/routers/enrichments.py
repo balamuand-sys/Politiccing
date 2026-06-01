@@ -3,7 +3,7 @@ from database import get_supabase
 from models import EnrichmentRequest
 from services import claude_client
 
-router = APIRouter(prefix="/api/documents", tags=["enrichments"])
+router = APIRouter(prefix="/documents", tags=["enrichments"])
 
 ENRICHMENT_CONFIGS = {
     "law": {

@@ -11,7 +11,7 @@ from services import claude_client
 from services.pdf_parser import extract_text, get_preview
 from services.embeddings import chunk_text, embed_documents
 
-router = APIRouter(prefix="/api/documents", tags=["documents"])
+router = APIRouter(prefix="/documents", tags=["documents"])
 
 TMP_DIR = "/tmp"
 

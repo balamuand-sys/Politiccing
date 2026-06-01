@@ -7,7 +7,7 @@ from models import SummaryCreate
 from services import claude_client
 from services.context_builder import build_context, get_political_context
 
-router = APIRouter(prefix="/api/documents", tags=["summaries"])
+router = APIRouter(prefix="/documents", tags=["summaries"])
 
 
 def _length_to_instruction(length: int) -> str:

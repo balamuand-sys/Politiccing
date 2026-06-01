@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Ensure the api/ directory is on sys.path for Vercel serverless
 sys.path.insert(0, os.path.dirname(__file__))
 
 from fastapi import FastAPI
@@ -24,12 +23,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure Supabase storage bucket exists (idempotent)
 try:
     ensure_storage_bucket()
 except Exception:
     pass
 
+# Routers are mounted without /api prefix here.
+# With experimentalServices routePrefix="/api", Vercel routes /api/* to this service
+# and strips the /api prefix before forwarding to FastAPI.
 app.include_router(documents.router)
 app.include_router(summaries.router)
 app.include_router(enrichments.router)
@@ -38,6 +39,6 @@ app.include_router(memory.router)
 app.include_router(settings.router)
 
 
-@app.get("/api/health")
+@app.get("/health")
 def health():
     return {"status": "ok", "app": "Politikerapp v2"}
