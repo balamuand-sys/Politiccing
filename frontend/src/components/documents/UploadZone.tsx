@@ -9,10 +9,18 @@ interface UploadZoneProps {
   onClose: () => void
 }
 
+interface UploadResult {
+  id: string
+  title: string
+  meeting_date: string | null
+  committee: string | null
+  document_type: string | null
+}
+
 export default function UploadZone({ onUploaded, onClose }: UploadZoneProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<Record<string, unknown> | null>(null)
+  const [result, setResult] = useState<UploadResult | null>(null)
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles.length) return
@@ -50,15 +58,15 @@ export default function UploadZone({ onUploaded, onClose }: UploadZoneProps) {
           <span className="font-medium">Dokument lastet opp</span>
         </div>
         <div className="card p-4 space-y-2 text-sm">
-          <div><span className="text-gray-500">Tittel:</span> <strong>{result.title as string}</strong></div>
+          <div><span className="text-gray-500">Tittel:</span> <strong>{result.title}</strong></div>
           {result.meeting_date && (
-            <div><span className="text-gray-500">Møtedato:</span> {result.meeting_date as string}</div>
+            <div><span className="text-gray-500">Møtedato:</span> {result.meeting_date}</div>
           )}
           {result.committee && (
-            <div><span className="text-gray-500">Utvalg:</span> {result.committee as string}</div>
+            <div><span className="text-gray-500">Utvalg:</span> {result.committee}</div>
           )}
           {result.document_type && (
-            <div><span className="text-gray-500">Type:</span> {result.document_type as string}</div>
+            <div><span className="text-gray-500">Type:</span> {result.document_type}</div>
           )}
         </div>
         <div className="flex gap-3">
