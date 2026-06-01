@@ -9,29 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import ensure_storage_bucket
 from routers import documents, summaries, enrichments, content, memory, settings
 
-# Sub-app: routers use prefixes without /api (e.g. /documents, /memory)
-api = FastAPI(
+app = FastAPI(
     title="Politikerapp API",
     description="AI-assistent for kommunepolitikere",
     version="2.0.0",
 )
-
-api.include_router(documents.router)
-api.include_router(summaries.router)
-api.include_router(enrichments.router)
-api.include_router(content.router)
-api.include_router(memory.router)
-api.include_router(settings.router)
-
-
-@api.get("/health")
-def health():
-    return {"status": "ok", "app": "Politikerapp v2"}
-
-
-# Root app: Vercel serverless receives the full path (/api/...) and forwards here.
-# Mounting api at /api means /api/documents/... routes to the /documents/ router.
-app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,9 +23,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/api", api)
-
 try:
     ensure_storage_bucket()
 except Exception:
     pass
+
+# Vercel experimentalServices strips the /api routePrefix before forwarding,
+# so routers use prefixes without /api (e.g. /documents, /memory, /settings).
+app.include_router(documents.router)
+app.include_router(summaries.router)
+app.include_router(enrichments.router)
+app.include_router(content.router)
+app.include_router(memory.router)
+app.include_router(settings.router)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "app": "Politikerapp v2"}
